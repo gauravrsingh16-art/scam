@@ -2,11 +2,37 @@
 ### Production-Quality AIML Mini Project — Cybersecurity Threat Defense Engine
 
 [![Python Version](https://img.shields.io/badge/Python-3.14%2B-blue.svg)](https://www.python.org/)
-[![Framework](https://img.shields.io/badge/Frontend-Streamlit-FF4B4B.svg)](https://streamlit.io/)
+[![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Vite%20%7C%20Streamlit-8B35F6.svg)](https://vitejs.dev/)
+[![Backend](https://img.shields.io/badge/API-FastAPI%20ASGI-009688.svg)](https://fastapi.tiangolo.com/)
+[![Deployment](https://img.shields.io/badge/Deploy-Vercel%20%7C%20Streamlit%20Cloud-black.svg)](https://vercel.com/)
 [![Machine Learning](https://img.shields.io/badge/ML-Scikit--Learn-F7931E.svg)](https://scikit-learn.org/)
 [![Database](https://img.shields.io/badge/Storage-SQLite3-003B57.svg)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/Tests-23%20Passing-20C997.svg)](https://pytest.org/)
+[![Tests](https://img.shields.io/badge/Tests-32%20Passing-20C997.svg)](https://pytest.org/)
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+
+---
+
+## 🚀 Vercel Deployment Architecture & Fix
+
+### The Root Cause of `[PYTHON_ENTRYPOINT_NOT_FOUND]`
+When deploying Python repositories on Vercel, the `@vercel/python` serverless builder automatically inspects the repository root. If it discovers `requirements.txt` and `app.py`, Vercel assumes `app.py` is an ASGI/WSGI serverless function and expects it to export a top-level `app`, `application`, or `handler` variable.
+
+Because the original project is a **Streamlit application**, `app.py` runs a continuous WebSocket event loop (`streamlit run app.py`) and does not export an ASGI handler. Streamlit cannot run directly as a stateless Vercel Serverless Function.
+
+### The Solution: Production Dual Architecture
+Rather than hacking `app.py` with dummy variables or deleting Streamlit, this repository adopts a **Dual-Deployment Architecture**:
+
+1. **Vercel Serverless Architecture (React + FastAPI):**
+   - **Backend:** `api/index.py` exports a top-level ASGI `app = FastAPI(...)` serverless endpoint that reuses the exact same trained scikit-learn models (`models/spam_model.pkl`, `models/vectorizer.pkl`) and preprocessing logic.
+   - **Frontend:** A high-performance React 18 SPA built with Vite in `web/` (compiling to `dist/`) adhering strictly to the premium dark-purple cybersecurity SaaS design system.
+   - **Routing:** `vercel.json` maps `/api/(.*)` to `api/index.py` and serves the static frontend from `dist/`.
+   - **Vercel Ignore:** `.vercelignore` prevents Vercel's Python builder from scanning `app.py`, `views/`, and `tests/`.
+
+2. **Streamlit Community Cloud Architecture:**
+   - The full, interactive Streamlit application (`app.py`, `views/`) is **100% preserved**.
+   - Running `streamlit run app.py` continues to execute the multi-page Streamlit application locally or on Streamlit Community Cloud.
+
+---
 
 ---
 
@@ -231,37 +257,86 @@ pip install -r requirements.txt
 
 ---
 
-## 10. Execution Instructions
+## 10. Execution & Deployment Instructions
 
-### A. Run the Interactive Web Application
-Launch the complete Streamlit application:
+### A. Deploy to Vercel (Production Serverless)
+1. **Prerequisites:** Push changes to GitHub repository [https://github.com/gauravrsingh16-art/scam](https://github.com/gauravrsingh16-art/scam).
+2. **Via Vercel Web Dashboard:**
+   - Go to [vercel.com](https://vercel.com) and click **"Add New Project"**.
+   - Select GitHub repository `gauravrsingh16-art/scam`.
+   - Vercel will automatically detect `vercel.json` and the `vite` framework.
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+   - Click **"Deploy"**.
+3. **Via Vercel CLI:**
+   ```powershell
+   npm install -g vercel
+   vercel --prod
+   ```
+   *Note: `.vercelignore` guarantees that `app.py` is ignored by the Python serverless scanner, and `api/index.py` handles all `/api/*` routes with genuine ML inference.*
+
+### B. Run Modern Stack Locally (React + FastAPI)
+1. **Terminal 1 — Start FastAPI Serverless Backend:**
+   ```powershell
+   python -m uvicorn api.index:app --reload --port 8000
+   ```
+   API Documentation available at: `http://localhost:8000/api/docs`
+2. **Terminal 2 — Start React/Vite Frontend:**
+   ```powershell
+   npm run dev
+   ```
+   Open browser at: `http://localhost:3000`
+
+### C. Run Streamlit Application (Local & Streamlit Cloud)
+Launch the multi-page Streamlit application:
 ```powershell
 streamlit run app.py
 ```
-The browser interface will automatically open at:
-`http://localhost:8501`
+Open browser at: `http://localhost:8501`
 
-### B. Train / Retrain Model via Command Line
-Execute the training script independently with customizable hyperparameters:
+### D. Train / Retrain Model via Command Line
 ```powershell
-# Default training (TF-IDF, Unigram+Bigram, max_features=5000, alpha=0.1)
+# Retrain model on active dataset
 python train.py
-
-# Optional: Train using CountVectorizer
-python train.py --vectorizer count --max-features 4000
-
-# Optional: Configure N-gram range and smoothing parameter
-python train.py --vectorizer tfidf --ngram 1 2 --alpha 0.2 --drop-duplicates
 ```
 
 ---
 
 ## 11. Automated Testing Instructions
-Run the full test suite using Pytest:
+Run the full automated test suite using Pytest:
 ```powershell
 python -m pytest -v
 ```
-All **23 unit and integration tests** will execute and report passing status.
+All **32 unit, integration, and API tests** execute and pass:
+- Preprocessing & regex tests (`test_preprocessing.py`)
+- Dataset loader & column inference tests (`test_dataset.py`)
+- Feature extraction & TF-IDF tests (`test_feature_extraction.py`)
+- Training lifecycle & artifact tests (`test_training.py`)
+- Prediction & boundary tests (`test_prediction.py`)
+- SQLite database & privacy tests (`test_database.py`)
+- Metric calculation tests (`test_evaluation.py`)
+- FastAPI serverless endpoint tests (`test_api.py`)
+
+---
+
+## 12. REST API Endpoints Specification
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Service health status, model readiness, and version |
+| `GET` | `/api/dashboard-stats` | Real-time KPI counts, threat distribution, recent audits |
+| `POST` | `/api/predict` | Classifies single message text with confidence & heuristics |
+| `POST` | `/api/email-analysis` | Analyzes structured email (Subject, Sender, Body) |
+| `POST` | `/api/bulk-predict` | Batch classification for uploaded CSV/TSV files |
+| `GET` | `/api/model-metrics` | Actual test metrics (Accuracy, Precision, Recall, Confusion Matrix) |
+| `GET` | `/api/history` | Filterable SQLite audit records |
+| `POST` | `/api/history/delete` | Deletes specific audit record by ID |
+| `POST` | `/api/history/clear` | Purges all audit history records |
+| `GET` | `/api/dataset-info` | Corpus rows, class balance, and sample rows |
+| `GET` | `/api/settings` | Retrieves privacy settings (audit logging & preview storage) |
+| `POST` | `/api/settings` | Updates privacy settings |
+
+---
 
 ---
 

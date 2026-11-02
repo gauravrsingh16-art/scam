@@ -31,3 +31,13 @@ Desktop.ini
 # Temporary files
 *.log
 scratch/
+
+# Node & Frontend Build
+node_modules/
+dist/
+.vercel/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local

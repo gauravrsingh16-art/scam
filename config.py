@@ -24,7 +24,13 @@ MODEL_FILE = MODELS_DIR / "spam_model.pkl"
 VECTORIZER_FILE = MODELS_DIR / "vectorizer.pkl"
 METRICS_FILE = MODELS_DIR / "metrics.json"
 
-HISTORY_DB_PATH = DATA_DIR / "classification_history.db"
+# Handle read-only / Vercel serverless environment for SQLite
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    import tempfile
+    HISTORY_DB_PATH = Path(tempfile.gettempdir()) / "classification_history.db"
+else:
+    HISTORY_DB_PATH = DATA_DIR / "classification_history.db"
+
 STYLES_CSS_PATH = ASSETS_DIR / "styles.css"
 
 class SafeColorDict(dict):

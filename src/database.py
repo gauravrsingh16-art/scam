@@ -7,11 +7,21 @@ import sqlite3
 from datetime import datetime
 from typing import Dict, Any, Optional
 import pandas as pd
-from config import HISTORY_DB_PATH
+import shutil
+from config import HISTORY_DB_PATH, DATA_DIR
 
 
 def get_connection() -> sqlite3.Connection:
-    """Establish connection to SQLite database."""
+    """Establish connection to SQLite database, ensuring directory and tables exist."""
+    db_exists = HISTORY_DB_PATH.exists()
+    HISTORY_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not db_exists:
+        seed_db = DATA_DIR / "classification_history.db"
+        if seed_db.exists() and seed_db.resolve() != HISTORY_DB_PATH.resolve():
+            try:
+                shutil.copy2(seed_db, HISTORY_DB_PATH)
+            except Exception:
+                pass
     conn = sqlite3.connect(HISTORY_DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
