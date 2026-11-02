@@ -105,6 +105,8 @@ class SettingsUpdateRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 @app.get("/api/health", summary="Service Health and Status")
+@app.get("/api", summary="API Root Health Status")
+@app.get("/", summary="Root Health Status")
 def health_check() -> Dict[str, Any]:
     """Check API status, model loading status, and system metadata."""
     service = SpamClassifierService.get_instance()

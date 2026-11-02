@@ -252,7 +252,11 @@ cd d:\Desktop\unmani
 
 ### Step 2: Install Required Dependencies
 ```powershell
+# For Vercel Serverless & FastAPI API:
 pip install -r requirements.txt
+
+# For Streamlit Application & Visualization Suite:
+pip install -r requirements-streamlit.txt
 ```
 
 ---

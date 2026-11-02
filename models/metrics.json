@@ -1,6 +1,6 @@
 {
   "status": "success",
-  "trained_at": "2026-11-03 00:35:23",
+  "trained_at": "2026-11-03 00:51:07",
   "model_type": "MultinomialNB",
   "vectorizer_type": "tfidf",
   "hyperparameters": {
